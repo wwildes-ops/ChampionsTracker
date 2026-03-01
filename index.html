@@ -1,120 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Champions Combat Tracker</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --text-main: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.6);
+            --input-bg: #2c2c2c;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container {
+            background-color: var(--surface-color);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #333; }
+        .tab-btn { flex: 1; background: none; border: none; color: var(--text-dim); padding: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+        .tab-btn.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
+
+        .section { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 20px; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 6px; text-transform: uppercase; font-weight: bold; }
+
+        select, input[type="number"] { width: 100%; background: var(--input-bg); color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+
+        #rollBtn { width: 100%; background: var(--primary-color); color: #000; border: none; padding: 16px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; text-transform: uppercase; cursor: pointer; }
+
+        .results { text-align: center; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-top: 10px; }
+        .result-display { display: flex; justify-content: space-between; gap: 10px; font-size: 1.8rem; font-weight: bold; color: var(--secondary-color); margin-top: 10px; }
+        .res-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
+        #kbRes { color: var(--primary-color); }
+        #multiplierText { color: #aaa; font-size: 0.8rem; margin-top: 10px; font-style: italic; }
+
+        .history { margin-top: 20px; text-align: left; }
+        #rollLog { list-style: none; padding: 0; max-height: 120px; overflow-y: auto; font-size: 0.85rem; color: #bbb; }
+        #rollLog li { padding: 5px 0; border-bottom: 1px solid #222; }
+
+        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .max-label { font-size: 0.7rem; color: var(--text-dim); }
+        .max-label input { width: 45px !important; padding: 4px !important; font-size: 0.8rem !important; display: inline-block; }
+        .counter { display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .counter button { width: 45px; padding: 10px 0; background: var(--input-bg); color: var(--secondary-color); border: 1px solid #444; border-radius: 4px; cursor: pointer; }
+        .counter input { width: 70px !important; text-align: center; font-size: 1.2rem; }
+
+        .rec-btn { width: 100%; background: var(--secondary-color); color: #000; border: none; padding: 15px; border-radius: 8px; font-weight: bold; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
 <div class="container">
-<div class="tabs">
-  <button class="tab-btn active" onclick="showTab('dice')">Dice Roller</button>
-  <button class="tab-btn" onclick="showTab('stats')">Stats Tracker</button>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('dice')">Dice Roller</button>
+        <button class="tab-btn" onclick="showTab('stats')">Stats Tracker</button>
+    </div>
+
+    <div id="dice-screen" class="tab-content">
+        <div class="section">
+            <div class="input-group">
+                <label>Attack Type</label>
+                <select id="attackType" onchange="updateDiceList()">
+                    <option value="normal">Normal Attack</option>
+                    <option value="bodyOnly">Body Only Attack</option>
+                    <option value="killing">Killing Attack</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Dice Amount</label>
+                <select id="diceSelection"></select>
+            </div>
+            <div class="input-group">
+                <label>Knockback Type</label>
+                <select id="kbType">
+                    <option value="standard">Standard (BODY - 2d6)</option>
+                    <option value="double">Double (x2)</option>
+                    <option value="air">In Air (BODY - 1d6)</option>
+                    <option value="none">No Knockback</option>
+                </select>
+            </div>
+            <div id="stunBonusGroup" class="input-group" style="display:none;">
+                <label>Stun Multiplier Bonus</label>
+                <input type="number" id="stunBonus" value="0" min="0">
+            </div>
+            <button id="rollBtn" onclick="processRoll()">Roll Attack</button>
+        </div>
+
+        <div class="results">
+            <p id="rollTypeDisplay">Ready</p>
+            <div class="result-display">
+                <div><span class="res-label">STUN</span><strong id="stunRes">0</strong></div>
+                <div><span class="res-label">BODY</span><strong id="bodyRes">0</strong></div>
+                <div><span class="res-label">KB (Hexes)</span><strong id="kbRes">0</strong></div>
+            </div>
+            <div id="multiplierText"></div>
+        </div>
+
+        <div class="history">
+            <h4>Recent Rolls</h4>
+            <ul id="rollLog"></ul>
+        </div>
+    </div>
+
+    <div id="stats-screen" class="tab-content" style="display:none;">
+        <div class="section">
+            <h3>Character Vitality</h3>
+            <div class="stat-control">
+                <div class="stat-header">
+                    <label>STUN</label>
+                    <span class="max-label">MAX: <input type="number" id="max-stun" value="50" oninput="syncMax('stun')"></span>
+                </div>
+                <div class="counter">
+                    <button onclick="changeStat('stun', -1)">-1</button>
+                    <button onclick="changeStat('stun', -5)">-5</button>
+                    <input type="number" id="val-stun" value="50">
+                    <button onclick="changeStat('stun', 5)">+5</button>
+                    <button onclick="changeStat('stun', 1)">+1</button>
+                </div>
+            </div>
+            <div class="stat-control" style="margin-top:20px;">
+                <div class="stat-header">
+                    <label>ENDURANCE</label>
+                    <span class="max-label">MAX: <input type="number" id="max-end" value="50" oninput="syncMax('end')"></span>
+                </div>
+                <div class="counter">
+                    <button onclick="changeStat('end', -1)">-1</button>
+                    <button onclick="changeStat('end', -5)">-5</button>
+                    <input type="number" id="val-end" value="50">
+                    <button onclick="changeStat('end', 5)">+5</button>
+                    <button onclick="changeStat('end', 1)">+1</button>
+                </div>
+            </div>
+            <div class="stat-control" style="margin-top:20px;">
+                <div class="stat-header">
+                    <label>BODY</label>
+                    <span class="max-label">MAX: <input type="number" id="max-body" value="10" oninput="syncMax('body')"></span>
+                </div>
+                <div class="counter">
+                    <button onclick="changeStat('body', -1)">-1</button>
+                    <input type="number" id="val-body" value="10">
+                    <button onclick="changeStat('body', 1)">+1</button>
+                </div>
+            </div>
+            <div style="margin-top:30px; border-top:1px solid #333; padding-top:20px;">
+                <div class="input-group">
+                    <label>Recovery (REC) Value</label>
+                    <input type="number" id="val-rec" value="10">
+                </div>
+                <button class="rec-btn" onclick="takeRecovery()">Take Recovery</button>
+            </div>
+        </div>
+    </div>
 </div>
 
-  <div id="dice-screen" class="tab-content">
-    <div class="section">
-      <div class="input-group">
-        <label>Attack Type</label>
-        <select id="attackType" onchange="updateDiceList()">
-          <option value="normal">Normal Attack</option>
-          <option value="bodyOnly">Body Only Attack</option>
-          <option value="killing">Killing Attack</option>
-        </select>
-      </div>
+<script>
+function showTab(tabName) {
+    document.getElementById('dice-screen').style.display = 'none';
+    document.getElementById('stats-screen').style.display = 'none';
+    document.getElementById(tabName + '-screen').style.display = 'block';
+    const buttons = document.querySelectorAll('.tab-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+}
 
-      <div class="input-group">
-        <label>Dice Amount</label>
-        <select id="diceSelection"></select>
-      </div>
-      
-      <div class="input-group">
-  <label>Knockback Type</label>
-  <select id="kbType">
-    <option value="standard">Standard (BODY - 2d6)</option>
-    <option value="double">Double (x2)</option>
-    <option value="air">In Air (BODY - 1d6)</option>
-    <option value="none">No Knockback</option>
-  </select>
-</div>
+function updateDiceList() {
+    const type = document.getElementById("attackType").value;
+    const diceSelect = document.getElementById("diceSelection");
+    const bonusGroup = document.getElementById("stunBonusGroup");
+    diceSelect.innerHTML = "";
+    bonusGroup.style.display = (type === "killing") ? "block" : "none";
 
-      <div id="stunBonusGroup" class="input-group" style="display:none;">
-        <label>Stun Multiplier Bonus (e.g., +1)</label>
-        <input type="number" id="stunBonus" value="0" min="0">
-      </div>
+    if (type === "killing") {
+        const kOptions = [{l:"+1 Pip",b:0,m:"p"}, {l:"1/2 d6",b:0,m:"h"}];
+        for (let i=1; i<=12; i++) {
+            kOptions.push({l:i+"d6", b:i, m:"n"});
+            kOptions.push({l:i+"d6+1", b:i, m:"p"});
+            kOptions.push({l:i+" 1/2 d6", b:i, m:"h"});
+        }
+        kOptions.forEach(o => {
+            let el = document.createElement("option");
+            el.textContent = o.l;
+            el.value = JSON.stringify(o);
+            diceSelect.appendChild(el);
+        });
+    } else {
+        for (let i=1; i<=25; i++) {
+            let el = document.createElement("option");
+            el.textContent = i + "d6";
+            el.value = JSON.stringify({b:i, m:"n", l: i+"d6"});
+            if(i===10) el.selected = true;
+            diceSelect.appendChild(el);
+        }
+    }
+}
 
-      <button id="rollBtn" onclick="processRoll()">Roll Attack</button>
-    </div>
+function processRoll() {
+    const type = document.getElementById("attackType").value;
+    const data = JSON.parse(document.getElementById("diceSelection").value);
+    const stunBonus = parseInt(document.getElementById("stunBonus").value) || 0;
+    const kbType = document.getElementById("kbType").value;
+    let stun = 0, body = 0;
 
-<div class="results">
-  <p id="rollTypeDisplay">Ready to Roll</p>
-  <div class="result-display">
-    <div>
-      <span class="res-label">STUN</span>
-      <strong id="stunRes">0</strong>
-    </div>
-    <div>
-      <span class="res-label">BODY</span>
-      <strong id="bodyRes">0</strong>
-    </div>
-    <div>
-      <span class="res-label">KB (hexes)</span>
-      <strong id="kbRes">0</strong>
-    </div>
-  </div>
-  <div id="multiplierText"></div>
-</div>
+    for (let i=0; i < data.b; i++) {
+        let r = Math.floor(Math.random() * 6) + 1;
+        if (type === "killing") body += r;
+        else {
+            if (type === "normal") stun += r;
+            if (r === 1) body += 0; else if (r === 6) body += 2; else body += 1;
+        }
+    }
+    if (data.m === "p") body += 1;
+    else if (data.m === "h") {
+        let hr = Math.floor(Math.random() * 6) + 1;
+        if (hr <= 3) body += 1; else if (hr <= 5) body += 2; else body += 3;
+    }
 
-    <div class="history">
-      <h4>Recent Rolls</h4>
-      <ul id="rollLog"></ul>
-    </div>
-  </div>
-  
-<div id="stats-screen" class="tab-content" style="display:none;">
-  <div class="section">
-    <h3>Character Vitality</h3>
-    
-    <div class="stat-control">
-      <div class="stat-header">
-        <label>STUN</label>
- <span class="max-label">MAX: <input type="number" id="max-stun" value="50" oninput="syncMax('stun')"></span>
-      </div>
-      <div class="counter">
-        <button onclick="changeStat('stun', -1)">-1</button>
-        <button onclick="changeStat('stun', -5)">-5</button>
-        <input type="number" id="val-stun" value="50">
-        <button onclick="changeStat('stun', 5)">+5</button>
-        <button onclick="changeStat('stun', 1)">+1</button>
-      </div>
-    </div>
+    let note = "";
+    if (type === "killing") {
+        let br = Math.floor(Math.random() * 3) + 1;
+        let fm = br + stunBonus;
+        stun = body * fm;
+        note = `Mult: x${fm} (Roll ${br} + Bonus ${stunBonus})`;
+    } else if (type === "bodyOnly") stun = "—";
 
-    <div class="stat-control">
-      <div class="stat-header">
-        <label>ENDURANCE</label>
-<span class="max-label">MAX: <input type="number" id="max-end" value="50" oninput="syncMax('end')"></span>
-      </div>
-      <div class="counter">
-        <button onclick="changeStat('end', -1)">-1</button>
-        <button onclick="changeStat('end', -5)">-5</button>
-        <input type="number" id="val-end" value="50">
-        <button onclick="changeStat('end', 5)">+5</button>
-        <button onclick="changeStat('end', 1)">+1</button>
-      </div>
-    </div>
+    let kbVal = 0;
+    if (kbType !== "none") {
+        let kbDice = (type === "killing") ? 3 : 2;
+        if (kbType === "air") kbDice -= 1;
+        let kbRoll = 0;
+        for(let k=0; k<kbDice; k++) kbRoll += Math.floor(Math.random()*6)+1;
+        kbVal = Math.max(0, body - kbRoll);
+        if (kbType === "double") kbVal *= 2;
+    }
 
-    <div class="stat-control">
-      <div class="stat-header">
-        <label>BODY</label>
-<span class="max-label">MAX: <input type="number" id="max-body" value="10" oninput="syncMax('body')"></span>
-           </div>
-   
-      <div class="counter">
-        <button onclick="changeStat('body', -1)">-1</button>
-        <input type="number" id="val-body" value="10">
-        <button onclick="changeStat('body', 1)">+1</button>
-      </div>
-    </div>
+    document.getElementById("stunRes").innerText = stun;
+    document.getElementById("bodyRes").innerText = body;
+    document.getElementById("kbRes").innerText = kbVal;
+    document.getElementById("multiplierText").innerText = note;
+    document.getElementById("rollTypeDisplay").innerText = `${type.toUpperCase()} - ${data.l}`;
 
-    <div class="recovery-group">
-      <div class="input-group">
-        <label>Recovery (REC) Value</label>
-        <input type="number" id="val-rec" value="10">
-      </div>
-      <button class="rec-btn" onclick="takeRecovery()">Take Recovery</button>
-    </div>
-  </div>
-</div>
-</div>
+    const log = document.getElementById("rollLog");
+    const entry = document.createElement("li");
+    entry.innerText = `${data.l} ${type}: ${stun}S, ${body}B, ${kbVal} Hex KB`;
+    log.prepend(entry);
+}
+
+function changeStat(s, a) {
+    const i = document.getElementById('val-' + s);
+    i.value = (parseInt(i.value) || 0) + a;
+}
+function syncMax(s) {
+    document.getElementById('val-' + s).value = document.getElementById('max-' + s).value;
+}
+function takeRecovery() {
+    const rec = parseInt(document.getElementById('val-rec').value) || 0;
+    ['stun', 'end'].forEach(s => {
+        const cur = document.getElementById('val-' + s);
+        const max = document.getElementById('max-' + s);
+        cur.value = Math.min(parseInt(cur.value) + rec, parseInt(max.value));
+    });
+}
+updateDiceList();
+</script>
+</body>
+</html>
