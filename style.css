@@ -1,0 +1,288 @@
+:root {
+  --bg-color: #121212;
+  --surface-color: #1e1e1e;
+  --primary-color: #bb86fc; /* Superhero Purple */
+  --secondary-color: #03dac6; /* Teal accents */
+  --text-main: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.6);
+  --input-bg: #2c2c2c;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  background-color: var(--surface-color);
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  width: 100%;
+  max-width: 420px;
+}
+
+/* --- TABS --- */
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #333;
+}
+
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  padding: 12px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.tab-btn.active {
+  color: var(--primary-color);
+  border-bottom: 3px solid var(--primary-color);
+}
+
+.tab-btn:disabled {
+  opacity: 0.2;
+}
+
+/* --- SECTIONS --- */
+.section {
+  background-color: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--secondary-color);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+/* --- THE COOL INPUTS --- */
+select, input[type="number"] {
+  width: 100%;
+  background-color: var(--input-bg) !important;
+  color: white !important;
+  border: 1px solid #444;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+
+/* --- THE COOL BUTTON --- */
+#rollBtn {
+  width: 100%;
+  background-color: var(--primary-color);
+  color: #000;
+  border: none;
+  padding: 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+#rollBtn:hover {
+  background-color: #d1b3ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+#rollBtn:active {
+  transform: translateY(0);
+}
+
+/* --- RESULTS AREA --- */
+.results {
+  text-align: center;
+  background: rgba(0,0,0,0.3);
+  border-radius: 12px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+#rollTypeDisplay {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+}
+
+/* Update the result display to handle three columns */
+.result-display {
+  display: flex;
+  justify-content: space-between; /* Spreads them out evenly */
+  gap: 10px;
+  font-size: 1.8rem; /* Slightly smaller to fit 3 numbers across */
+  font-weight: bold;
+  color: var(--secondary-color);
+  margin-top: 10px;
+}
+
+.result-display div {
+  flex: 1;
+  display: flex;
+  flex-direction: column; /* Puts label above the number */
+  align-items: center;
+}
+
+/* Small labels above the big numbers */
+.res-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+  letter-spacing: 1px;
+}
+
+/* Make the KB result stand out with your primary purple */
+#kbRes {
+  color: var(--primary-color);
+}
+
+#multiplierText {
+  color: #aaa;
+  font-size: 0.8rem;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* --- HISTORY --- */
+.history {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.history h4 {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+
+#rollLog {
+  list-style: none;
+  padding: 0;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+#rollLog li {
+  padding: 8px 5px;
+  border-bottom: 1px solid #222;
+  font-size: 0.85rem;
+  color: #bbb;
+}
+
+/* Stat Tracker Styling */
+.stat-control {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.max-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.max-label input {
+  width: 45px !important;
+  padding: 4px !important;
+  font-size: 0.8rem !important;
+  background: transparent !important;
+  border: 1px solid #444 !important;
+  margin-left: 5px !important;
+}
+
+.stat-control label {
+  display: block;
+  color: var(--primary-color);
+  font-weight: bold;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.counter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.counter button {
+  width: 45px !important;
+  padding: 10px 0 !important;
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  background-color: var(--input-bg) !important;
+  color: var(--secondary-color) !important;
+  border: 1px solid #444 !important;
+}
+
+.counter input {
+  width: 70px !important;
+  font-size: 1.4rem !important;
+  font-weight: bold;
+  margin: 0 5px !important;
+  border-bottom: 2px solid var(--primary-color) !important;
+}
+
+.recovery-group {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+  text-align: center;
+}
+
+.recovery-group label {
+  color: var(--secondary-color) !important;
+}
+
+.rec-btn {
+  width: 100%;
+  background-color: var(--secondary-color) !important;
+  color: #000 !important;
+  font-weight: bold;
+  padding: 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+
+.rec-btn:hover {
+  background-color: #05fcd3 !important;
+  transform: translateY(-2px);
+}
