@@ -30,8 +30,9 @@
             padding: 20px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            width: 100%;
-            max-width: 420px;
+            width: 95%;
+            max-width: 800px;
+            margin: 20px auto;
         }
 
         .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #333; }
@@ -49,21 +50,31 @@
         .results { text-align: center; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-top: 10px; }
         .result-display { display: flex; justify-content: space-between; gap: 10px; font-size: 1.8rem; font-weight: bold; color: var(--secondary-color); margin-top: 10px; }
         .res-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
-        #kbRes { color: var(--primary-color); }
-        #multiplierText { color: #aaa; font-size: 0.8rem; margin-top: 10px; font-style: italic; }
-
-        .history { margin-top: 20px; text-align: left; }
-        #rollLog { list-style: none; padding: 0; max-height: 120px; overflow-y: auto; font-size: 0.85rem; color: #bbb; }
+        
+        #rollLog { list-style: none; padding: 0; max-height: 150px; overflow-y: auto; font-size: 0.85rem; color: #bbb; }
         #rollLog li { padding: 5px 0; border-bottom: 1px solid #222; }
 
+        /* Dashboard Layout */
+        .stats-dashboard { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
+        .stats-column { flex: 1; min-width: 280px; }
+        .vitality-col { border-right: 1px solid rgba(255,255,255,0.1); padding-right: 15px; }
+        
         .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .max-label { font-size: 0.7rem; color: var(--text-dim); }
         .max-label input { width: 45px !important; padding: 4px !important; font-size: 0.8rem !important; display: inline-block; }
-        .counter { display: flex; justify-content: center; align-items: center; gap: 5px; }
-        .counter button { width: 45px; padding: 10px 0; background: var(--input-bg); color: var(--secondary-color); border: 1px solid #444; border-radius: 4px; cursor: pointer; }
-        .counter input { width: 70px !important; text-align: center; font-size: 1.2rem; }
+        
+        .counter { display: flex; justify-content: center; align-items: center; gap: 4px; }
+        .counter button { width: 40px; padding: 10px 0; background: var(--input-bg); color: var(--secondary-color); border: 1px solid #444; border-radius: 4px; cursor: pointer; }
+        .counter input { width: 65px !important; text-align: center; font-size: 1.1rem; }
 
-        .rec-btn { width: 100%; background: var(--secondary-color); color: #000; border: none; padding: 15px; border-radius: 8px; font-weight: bold; text-transform: uppercase; margin-top: 10px; cursor: pointer; }
+        .stat-grid { display: grid; gap: 10px; }
+        .triple-input, .double-input { display: flex; gap: 4px; }
+        .rec-btn { width: 100%; background: var(--secondary-color); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+
+        @media (max-width: 650px) {
+            .stats-dashboard { flex-direction: column; }
+            .vitality-col { border-right: none; border-bottom: 1px solid #444; padding-bottom: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -82,6 +93,7 @@
                     <option value="normal">Normal Attack</option>
                     <option value="bodyOnly">Body Only Attack</option>
                     <option value="killing">Killing Attack</option>
+                    <option value="skill">Skill/Stat Check</option>
                 </select>
             </div>
             <div class="input-group">
@@ -99,7 +111,7 @@
             </div>
             <div id="stunBonusGroup" class="input-group" style="display:none;">
                 <label>Stun Multiplier Bonus</label>
-                <input type="number" id="stunBonus" value="0" min="0">
+                <input type="number" id="stunBonus" value="0">
             </div>
             <button id="rollBtn" onclick="processRoll()">Roll Attack</button>
         </div>
@@ -107,108 +119,115 @@
         <div class="results">
             <p id="rollTypeDisplay">Ready</p>
             <div class="result-display">
-                <div><span class="res-label">STUN</span><strong id="stunRes">0</strong></div>
+                <div><span class="res-label">STUN / TOTAL</span><strong id="stunRes">0</strong></div>
                 <div><span class="res-label">BODY</span><strong id="bodyRes">0</strong></div>
                 <div><span class="res-label">KB (Hexes)</span><strong id="kbRes">0</strong></div>
             </div>
-            <div id="multiplierText"></div>
+            <div id="multiplierText" style="color: #aaa; font-size: 0.8rem; margin-top: 10px; font-style: italic;"></div>
         </div>
 
-        <div class="history">
-            <h4>Recent Rolls</h4>
+        <div class="section" style="margin-top: 20px;">
+            <h4 style="color:var(--secondary-color); border-bottom:1px solid #333; margin-bottom:10px;">Recent Rolls</h4>
             <ul id="rollLog"></ul>
         </div>
     </div>
 
     <div id="stats-screen" class="tab-content" style="display:none;">
         <div class="section">
-            <h3>Character Vitality</h3>
-            <div class="stat-control">
-                <div class="stat-header">
-                    <label>STUN</label>
-                    <span class="max-label">MAX: <input type="number" id="max-stun" value="50" oninput="syncMax('stun')"></span>
+            <div class="stats-dashboard">
+                <div class="stats-column vitality-col">
+                    <h3 style="color:var(--primary-color); border-bottom:1px solid #444; margin-top:0;">Vitality</h3>
+                    <div class="stat-control">
+                        <div class="stat-header"><label>STUN</label><span class="max-label">MAX: <input type="number" id="max-stun" value="50" oninput="syncMax('stun')"></span></div>
+                        <div class="counter">
+                            <button onclick="changeStat('stun', -1)">-1</button>
+                            <button onclick="changeStat('stun', -5)">-5</button>
+                            <input type="number" id="val-stun" value="50" onchange="saveAll()">
+                            <button onclick="changeStat('stun', 5)">+5</button>
+                            <button onclick="changeStat('stun', 1)">+1</button>
+                        </div>
+                    </div>
+                    <div class="stat-control" style="margin-top:15px;">
+                        <div class="stat-header"><label>END</label><span class="max-label">MAX: <input type="number" id="max-end" value="50" oninput="syncMax('end')"></span></div>
+                        <div class="counter">
+                            <button onclick="changeStat('end', -1)">-1</button>
+                            <button onclick="changeStat('end', -5)">-5</button>
+                            <input type="number" id="val-end" value="50" onchange="saveAll()">
+                            <button onclick="changeStat('end', 5)">+5</button>
+                            <button onclick="changeStat('end', 1)">+1</button>
+                        </div>
+                    </div>
+                    <div class="stat-control" style="margin-top:15px;">
+                        <div class="stat-header"><label>BODY</label><span class="max-label">MAX: <input type="number" id="max-body" value="10" oninput="syncMax('body')"></span></div>
+                        <div class="counter">
+                            <button onclick="changeStat('body', -1)">-1</button>
+                            <input type="number" id="val-body" value="10" onchange="saveAll()">
+                            <button onclick="changeStat('body', 1)">+1</button>
+                        </div>
+                    </div>
+                    <div style="margin-top:20px; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px;">
+                        <div class="input-group"><label>REC</label><input type="number" id="val-rec" value="10" onchange="saveAll()"></div>
+                        <button class="rec-btn" onclick="takeRecovery()">Take Recovery</button>
+                    </div>
                 </div>
-                <div class="counter">
-                    <button onclick="changeStat('stun', -1)">-1</button>
-                    <button onclick="changeStat('stun', -5)">-5</button>
-                    <input type="number" id="val-stun" value="50">
-                    <button onclick="changeStat('stun', 5)">+5</button>
-                    <button onclick="changeStat('stun', 1)">+1</button>
+
+                <div class="stats-column">
+                    <h3 style="color:var(--primary-color); border-bottom:1px solid #444; margin-top:0;">Combat & Defense</h3>
+                    <div class="stat-grid">
+                        <div class="input-group"><label>OCV / DCV / ECV</label>
+                            <div class="triple-input">
+                                <input type="number" id="val-ocv" value="5" onchange="saveAll()">
+                                <input type="number" id="val-dcv" value="5" onchange="saveAll()">
+                                <input type="number" id="val-ecv" value="3" onchange="saveAll()">
+                            </div>
+                        </div>
+                        <div class="input-group"><label>SPD</label><input type="number" id="val-spd" value="3" oninput="updatePhases(); saveAll();"></div>
+                    </div>
+                    <div id="phase-display" style="font-size:0.85rem; color:var(--secondary-color); margin: 5px 0 15px 0; font-weight:bold;">Phases: 4, 8, 12</div>
+                    
+                    <div class="stat-grid">
+                        <div class="input-group"><label>PD / rPD</label><div class="double-input"><input type="number" id="val-pd" value="8" onchange="saveAll()"><input type="number" id="val-rpd" value="0" onchange="saveAll()"></div></div>
+                        <div class="input-group"><label>ED / rED</label><div class="double-input"><input type="number" id="val-ed" value="8" onchange="saveAll()"><input type="number" id="val-red" value="0" onchange="saveAll()"></div></div>
+                        <div class="input-group"><label>Pow / Men / Fla Def</label>
+                            <div class="triple-input">
+                                <input type="number" id="val-powd" value="0" onchange="saveAll()">
+                                <input type="number" id="val-mentd" value="0" onchange="saveAll()">
+                                <input type="number" id="val-flashd" value="0" onchange="saveAll()">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="stat-control" style="margin-top:20px;">
-                <div class="stat-header">
-                    <label>ENDURANCE</label>
-                    <span class="max-label">MAX: <input type="number" id="max-end" value="50" oninput="syncMax('end')"></span>
-                </div>
-                <div class="counter">
-                    <button onclick="changeStat('end', -1)">-1</button>
-                    <button onclick="changeStat('end', -5)">-5</button>
-                    <input type="number" id="val-end" value="50">
-                    <button onclick="changeStat('end', 5)">+5</button>
-                    <button onclick="changeStat('end', 1)">+1</button>
-                </div>
-            </div>
-            <div class="stat-control" style="margin-top:20px;">
-                <div class="stat-header">
-                    <label>BODY</label>
-                    <span class="max-label">MAX: <input type="number" id="max-body" value="10" oninput="syncMax('body')"></span>
-                </div>
-                <div class="counter">
-                    <button onclick="changeStat('body', -1)">-1</button>
-                    <input type="number" id="val-body" value="10">
-                    <button onclick="changeStat('body', 1)">+1</button>
-                </div>
-            </div>
-            <div style="margin-top:30px; border-top:1px solid #333; padding-top:20px;">
-                <div class="input-group">
-                    <label>Recovery (REC) Value</label>
-                    <input type="number" id="val-rec" value="10">
-                </div>
-                <button class="rec-btn" onclick="takeRecovery()">Take Recovery</button>
-            </div>
+            <p style="font-size: 0.6rem; color: #555; text-align: center; margin-top: 15px;">Auto-Saving to Browser...</p>
         </div>
     </div>
 </div>
 
 <script>
-function showTab(tabName) {
+const speedChart = { 1:[7], 2:[6,12], 3:[4,8,12], 4:[3,6,9,12], 5:[3,5,8,10,12], 6:[2,4,6,8,10,12], 7:[2,4,6,7,9,11,12], 8:[2,3,5,6,8,9,11,12], 9:[2,3,4,6,7,8,10,11,12], 10:[2,3,4,5,6,8,9,10,11,12], 11:[2,3,4,5,6,7,8,9,10,11,12], 12:[1,2,3,4,5,6,7,8,9,10,11,12] };
+const statIds = ['val-stun', 'max-stun', 'val-end', 'max-end', 'val-body', 'max-body', 'val-rec', 'val-ocv', 'val-dcv', 'val-ecv', 'val-spd', 'val-pd', 'val-rpd', 'val-ed', 'val-red', 'val-powd', 'val-mentd', 'val-flashd'];
+
+function showTab(t) {
     document.getElementById('dice-screen').style.display = 'none';
     document.getElementById('stats-screen').style.display = 'none';
-    document.getElementById(tabName + '-screen').style.display = 'block';
-    const buttons = document.querySelectorAll('.tab-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
+    document.getElementById(t + '-screen').style.display = 'block';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     event.currentTarget.classList.add('active');
 }
 
 function updateDiceList() {
     const type = document.getElementById("attackType").value;
-    const diceSelect = document.getElementById("diceSelection");
-    const bonusGroup = document.getElementById("stunBonusGroup");
-    diceSelect.innerHTML = "";
-    bonusGroup.style.display = (type === "killing") ? "block" : "none";
-
-    if (type === "killing") {
+    const ds = document.getElementById("diceSelection");
+    ds.innerHTML = "";
+    document.getElementById("stunBonusGroup").style.display = (type === "killing") ? "block" : "none";
+    if (type === "skill") {
+        let el = document.createElement("option"); el.textContent = "3d6"; el.value = JSON.stringify({b:3, m:"n", l: "3d6"}); ds.appendChild(el);
+    } else if (type === "killing") {
         const kOptions = [{l:"+1 Pip",b:0,m:"p"}, {l:"1/2 d6",b:0,m:"h"}];
-        for (let i=1; i<=12; i++) {
-            kOptions.push({l:i+"d6", b:i, m:"n"});
-            kOptions.push({l:i+"d6+1", b:i, m:"p"});
-            kOptions.push({l:i+" 1/2 d6", b:i, m:"h"});
-        }
-        kOptions.forEach(o => {
-            let el = document.createElement("option");
-            el.textContent = o.l;
-            el.value = JSON.stringify(o);
-            diceSelect.appendChild(el);
-        });
+        for (let i=1; i<=12; i++) { kOptions.push({l:i+"d6", b:i, m:"n"}, {l:i+"d6+1", b:i, m:"p"}, {l:i+" 1/2 d6", b:i, m:"h"}); }
+        kOptions.forEach(o => { let el = document.createElement("option"); el.textContent = o.l; el.value = JSON.stringify(o); ds.appendChild(el); });
     } else {
-        for (let i=1; i<=25; i++) {
-            let el = document.createElement("option");
-            el.textContent = i + "d6";
-            el.value = JSON.stringify({b:i, m:"n", l: i+"d6"});
-            if(i===10) el.selected = true;
-            diceSelect.appendChild(el);
-        }
+        for (let i=1; i<=25; i++) { let el = document.createElement("option"); el.textContent = i + "d6"; el.value = JSON.stringify({b:i, m:"n", l: i+"d6"}); if(i===10) el.selected = true; ds.appendChild(el); }
     }
 }
 
@@ -217,68 +236,55 @@ function processRoll() {
     const data = JSON.parse(document.getElementById("diceSelection").value);
     const stunBonus = parseInt(document.getElementById("stunBonus").value) || 0;
     const kbType = document.getElementById("kbType").value;
-    let stun = 0, body = 0;
+    let stun = 0, body = 0, diceLabel = data.l;
 
-    for (let i=0; i < data.b; i++) {
-        let r = Math.floor(Math.random() * 6) + 1;
-        if (type === "killing") body += r;
-        else {
-            if (type === "normal") stun += r;
-            if (r === 1) body += 0; else if (r === 6) body += 2; else body += 1;
-        }
-    }
-    if (data.m === "p") body += 1;
-    else if (data.m === "h") {
-        let hr = Math.floor(Math.random() * 6) + 1;
-        if (hr <= 3) body += 1; else if (hr <= 5) body += 2; else body += 3;
+    if (type === "skill") {
+        for(let i=0; i<3; i++) stun += Math.floor(Math.random()*6)+1;
+        document.getElementById("stunRes").innerText = stun;
+        document.getElementById("bodyRes").innerText = "—";
+        document.getElementById("kbRes").innerText = "—";
+        document.getElementById("rollTypeDisplay").innerText = "SKILL CHECK";
+        const entry = document.createElement("li"); entry.style.color = "var(--secondary-color)"; entry.innerText = `🎲 Skill Check: Rolled ${stun}`;
+        document.getElementById("rollLog").prepend(entry);
+        return;
     }
 
-    let note = "";
-    if (type === "killing") {
-        let br = Math.floor(Math.random() * 3) + 1;
-        let fm = br + stunBonus;
-        stun = body * fm;
-        note = `Mult: x${fm} (Roll ${br} + Bonus ${stunBonus})`;
-    } else if (type === "bodyOnly") stun = "—";
+    for (let i=0; i<data.b; i++) {
+        let r = Math.floor(Math.random()*6)+1;
+        if(type==="killing") body += r;
+        else { if(type==="normal") stun += r; if(r===1) body+=0; else if(r===6) body+=2; else body+=1; }
+    }
+    if(data.m==="p") body+=1; else if(data.m==="h") { let hr=Math.floor(Math.random()*6)+1; if(hr<=3) body+=1; else if(hr<=5) body+=2; else body+=3; }
+
+    let logNote = "";
+    if(type==="killing") {
+        let br=Math.floor(Math.random()*3)+1; let fm=br+stunBonus; stun=body*fm; logNote=`(x${fm})`;
+        document.getElementById("multiplierText").innerText = `Mult: x${fm} (Roll ${br} + Bonus ${stunBonus})`;
+    } else { document.getElementById("multiplierText").innerText = ""; if(type==="bodyOnly") stun="—"; }
 
     let kbVal = 0;
-    if (kbType !== "none") {
-        let kbDice = (type === "killing") ? 3 : 2;
-        if (kbType === "air") kbDice -= 1;
-        let kbRoll = 0;
-        for(let k=0; k<kbDice; k++) kbRoll += Math.floor(Math.random()*6)+1;
-        kbVal = Math.max(0, body - kbRoll);
-        if (kbType === "double") kbVal *= 2;
+    if(kbType!=="none") {
+        let kbD = (type==="killing")?3:2; if(kbType==="air") kbD-=1;
+        let kbR = 0; for(let k=0; k<kbD; k++) kbR += Math.floor(Math.random()*6)+1;
+        kbVal = Math.max(0, body - kbR); if(kbType==="double") kbVal*=2;
     }
 
     document.getElementById("stunRes").innerText = stun;
     document.getElementById("bodyRes").innerText = body;
     document.getElementById("kbRes").innerText = kbVal;
-    document.getElementById("multiplierText").innerText = note;
-    document.getElementById("rollTypeDisplay").innerText = `${type.toUpperCase()} - ${data.l}`;
-
-    const log = document.getElementById("rollLog");
-    const entry = document.createElement("li");
-    entry.innerText = `${data.l} ${type}: ${stun}S, ${body}B, ${kbVal} Hex KB`;
-    log.prepend(entry);
+    document.getElementById("rollTypeDisplay").innerText = `${type.toUpperCase()} - ${diceLabel}`;
+    const entry = document.createElement("li"); entry.innerText = `💥 ${diceLabel} ${type}: ${stun}S, ${body}B, ${kbVal} Hex KB ${logNote}`;
+    document.getElementById("rollLog").prepend(entry);
 }
 
-function changeStat(s, a) {
-    const i = document.getElementById('val-' + s);
-    i.value = (parseInt(i.value) || 0) + a;
-}
-function syncMax(s) {
-    document.getElementById('val-' + s).value = document.getElementById('max-' + s).value;
-}
-function takeRecovery() {
-    const rec = parseInt(document.getElementById('val-rec').value) || 0;
-    ['stun', 'end'].forEach(s => {
-        const cur = document.getElementById('val-' + s);
-        const max = document.getElementById('max-' + s);
-        cur.value = Math.min(parseInt(cur.value) + rec, parseInt(max.value));
-    });
-}
-updateDiceList();
+function changeStat(s, a) { const i = document.getElementById('val-' + s); i.value = (parseInt(i.value) || 0) + a; saveAll(); }
+function syncMax(s) { document.getElementById('val-' + s).value = document.getElementById('max-' + s).value; saveAll(); }
+function updatePhases() { const spd = document.getElementById('val-spd').value; const phases = speedChart[spd] || []; document.getElementById('phase-display').innerText = "Phases: " + (phases.join(', ') || "None"); }
+function takeRecovery() { const r = parseInt(document.getElementById('val-rec').value)||0; ['stun','end'].forEach(s=>{ const c=document.getElementById('val-'+s), m=document.getElementById('max-'+s); c.value=Math.min(parseInt(c.value)+r, parseInt(m.value)); }); saveAll(); }
+function saveAll() { const d={}; statIds.forEach(id=>{ const el=document.getElementById(id); if(el) d[id]=el.value; }); localStorage.setItem('champions_data', JSON.stringify(d)); }
+function loadAll() { const s=localStorage.getItem('champions_data'); if(s) { const d=JSON.parse(s); statIds.forEach(id=>{ const el=document.getElementById(id); if(el && d[id]!==undefined) el.value=d[id]; }); } updatePhases(); }
+
+window.onload = () => { updateDiceList(); loadAll(); };
 </script>
 </body>
 </html>
